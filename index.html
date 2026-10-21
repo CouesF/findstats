@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F5F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1412" media="(prefers-color-scheme: dark)">
+<title>Find Your Stats</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="统计检验检索表：回答几个问题，找到该用的统计检验，附前提、效应量、报告格式和 Python / R 代码。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;900&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a field-guide style identification key. The key is the hero; method cards and basics follow as reference. */
+:root{
+  --paper:#F2F5F3; --sheet:#FFFFFF; --ink:#15201C; --ink-2:#4D5D57; --ink-3:#7A8983;
+  --rule:#D2DCD7; --accent:#0B6B57; --accent-ink:#FFFFFF; --accent-soft:#DFEEE8;
+  --mark:#A8490C; --mark-soft:#F8E9DD; --code:#EAF0ED;
+  --f-display:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  --f-body:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0E1412; --sheet:#151D1A; --ink:#E2EAE6; --ink-2:#A2B2AB; --ink-3:#73847D;
+  --rule:#2A3632; --accent:#52C4A3; --accent-ink:#06231B; --accent-soft:#17302A;
+  --mark:#F0A260; --mark-soft:#2E2117; --code:#1B2623; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0E1412; --sheet:#151D1A; --ink:#E2EAE6; --ink-2:#A2B2AB; --ink-3:#73847D;
+  --rule:#2A3632; --accent:#52C4A3; --accent-ink:#06231B; --accent-soft:#17302A;
+  --mark:#F0A260; --mark-soft:#2E2117; --code:#1B2623; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.3;margin:0}
+code,.mono{font-family:var(--f-mono);font-size:.88em}
+
+nav.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--rule)}
+nav.top .wrap{display:flex;align-items:center;gap:20px;padding-block:10px;flex-wrap:wrap}
+.brand{font-family:var(--f-mono);font-weight:500;font-size:13px;letter-spacing:.12em;color:var(--ink);text-decoration:none;text-transform:uppercase}
+.brand b{color:var(--accent);font-weight:500}
+nav.top .links{display:flex;gap:16px;margin-left:auto;font-size:14px}
+nav.top .links a{color:var(--ink-2);text-decoration:none}
+nav.top .links a:hover{color:var(--ink)}
+
+header.hero{padding-block:40px 24px}
+.hero h1{font-size:clamp(30px,5vw,46px);font-weight:900;letter-spacing:.02em}
+.hero p{max-width:40em;color:var(--ink-2);margin:12px 0 0}
+
+/* key */
+.key{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.trail{padding:24px;border-right:1px solid var(--rule);min-width:0}
+.stage{padding:24px 28px 28px;min-width:0}
+.label{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px}
+.trail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.trail li button{all:unset;cursor:pointer;display:grid;grid-template-columns:28px 1fr;gap:8px;width:100%;padding:8px 8px;border-radius:4px;box-sizing:border-box}
+.trail li button:hover{background:var(--accent-soft)}
+.trail .n{font-family:var(--f-mono);font-size:12px;color:var(--accent);padding-top:3px}
+.trail .q{font-size:13px;color:var(--ink-3);display:block;line-height:1.5}
+.trail .a{font-size:15px;color:var(--ink);font-weight:500;display:block;line-height:1.5}
+.quick{margin-top:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid var(--rule);background:transparent;color:var(--ink-2);cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stepno{font-family:var(--f-mono);font-size:13px;color:var(--accent)}
+.stage h2{font-size:24px;font-weight:600;margin:4px 0 18px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{all:unset;cursor:pointer;display:grid;grid-template-columns:28px 1fr 16px;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--rule);border-radius:5px;box-sizing:border-box}
+.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opt .k{font-family:var(--f-mono);font-size:13px;color:var(--accent)}
+.opt .t{font-size:16px;font-weight:500;line-height:1.5}
+.opt .h{display:block;font-size:13px;color:var(--ink-3);font-weight:400}
+.opt .go{color:var(--ink-3);font-family:var(--f-mono)}
+.ctrl{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.btn{font:inherit;font-size:14px;padding:7px 14px;border-radius:4px;border:1px solid var(--rule);background:transparent;color:var(--ink-2);cursor:pointer;text-decoration:none;display:inline-block}
+.btn:hover{color:var(--ink);border-color:var(--ink-3)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.result .en{font-family:var(--f-mono);font-size:13px;color:var(--ink-3)}
+.result h2{margin-bottom:6px}
+.result .lead{margin:0 0 16px;color:var(--ink-2)}
+dl.facts{display:grid;grid-template-columns:7em minmax(0,1fr);gap:8px 16px;margin:0;font-size:15px}
+dl.facts dt{color:var(--ink-3);font-size:13px;padding-top:2px}
+dl.facts dd{margin:0;min-width:0}
+dl.facts ul{margin:0;padding-left:1.1em}
+.report{font-family:var(--f-mono);font-size:14px;background:var(--mark-soft);color:var(--ink);padding:2px 8px;border-radius:3px;display:inline-block}
+
+section.block{padding-block:56px 8px}
+.sechead{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.sechead h2{font-size:28px;font-weight:600}
+.sechead p{margin:0;color:var(--ink-2);font-size:15px}
+
+/* cheat table */
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--sheet)}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+thead th{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:500;background:var(--paper)}
+td a{text-decoration:none}
+td a:hover{text-decoration:underline}
+td.dim{color:var(--ink-3)}
+
+/* cards */
+.filters{margin:24px 0 14px}
+.cards{display:flex;flex-direction:column;border:1px solid var(--rule);border-radius:6px;background:var(--sheet);overflow:hidden}
+details.card{border-bottom:1px solid var(--rule)}
+details.card,section.block,section#key,.prose article{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 64px)}
+details.card:last-child{border-bottom:0}
+details.card[hidden]{display:none}
+details.card summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;align-items:baseline;padding:14px 18px}
+details.card summary::-webkit-details-marker{display:none}
+details.card summary:hover{background:var(--accent-soft)}
+.cname{font-weight:700;font-size:16px}
+.cname .en{font-family:var(--f-mono);font-weight:400;font-size:12.5px;color:var(--ink-3);margin-left:8px}
+.cdesc{grid-column:1/2;color:var(--ink-2);font-size:14px;line-height:1.6}
+.tags{grid-row:1/3;grid-column:2;display:flex;gap:6px;align-self:center}
+.tag{font-size:12px;padding:1px 8px;border-radius:3px;background:var(--paper);color:var(--ink-2);border:1px solid var(--rule);white-space:nowrap}
+.tag.np{background:var(--mark-soft);border-color:transparent;color:var(--mark)}
+.cbody{padding:4px 18px 22px;display:flex;flex-direction:column;gap:18px}
+.code2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.codebox{min-width:0;background:var(--code);border-radius:5px;position:relative}
+.codebox .lang{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;color:var(--ink-3);padding:8px 12px 0;display:flex;justify-content:space-between;align-items:center}
+.codebox pre{margin:0;padding:6px 12px 12px;overflow-x:auto;font-family:var(--f-mono);font-size:13px;line-height:1.6;color:var(--ink)}
+.copy{font:inherit;font-size:11px;letter-spacing:.06em;border:0;background:transparent;color:var(--accent);cursor:pointer;padding:0}
+.note{font-size:14px;color:var(--ink-2);border-left:3px solid var(--mark);padding-left:12px;border-radius:0}
+
+/* basics */
+.basics{display:grid;grid-template-columns:200px minmax(0,1fr);gap:40px}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);align-self:start;font-size:14px}
+.toc ol{margin:0;padding-left:1.4em;color:var(--ink-3);display:flex;flex-direction:column;gap:4px}
+.toc a{color:var(--ink-2);text-decoration:none}
+.toc a:hover{color:var(--accent)}
+.prose{min-width:0}
+.prose article{padding-block:8px 28px;border-bottom:1px solid var(--rule);margin-bottom:28px}
+.prose article:last-child{border-bottom:0}
+.prose h3{font-size:21px;font-weight:600;margin-bottom:10px}
+.prose p,.prose li{max-width:42em}
+.prose p{margin:0 0 12px}
+.prose ul{margin:0 0 12px;padding-left:1.2em}
+.formula{font-family:var(--f-mono);font-size:14px;background:var(--code);padding:10px 14px;border-radius:5px;margin:0 0 12px;overflow-x:auto;white-space:pre}
+.prose .tablewrap{margin:4px 0 14px}
+
+footer{padding-block:40px 56px;color:var(--ink-3);font-size:13px;border-top:1px solid var(--rule);margin-top:40px}
+
+@media (max-width:820px){
+  .key{grid-template-columns:1fr}
+  .trail{border-right:0;border-bottom:1px solid var(--rule);order:2}
+  .stage{order:1;padding:22px 18px}
+  .code2{grid-template-columns:1fr}
+  .basics{grid-template-columns:1fr;gap:8px}
+  .toc{position:static}
+  .toc ol{flex-direction:row;flex-wrap:wrap;gap:4px 18px;padding-left:1.2em}
+  details.card summary{grid-template-columns:1fr}
+  .tags{grid-row:auto;grid-column:auto;justify-content:flex-start}
+  dl.facts{grid-template-columns:1fr;gap:2px}
+  dl.facts dd{margin-bottom:8px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .stage>*{animation:in .22s ease-out}
+  @keyframes in{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+<nav class="top" aria-label="页面导航">
+  <div class="wrap">
+    <a class="brand" href="#top">Find <b>Your</b> Stats</a>
+    <div class="links"><a href="#key">检索</a><a href="#tests">方法卡片</a><a href="#basics">基础知识</a></div>
+  </div>
+</nav>
+
+<div class="wrap" id="top">
+  <header class="hero">
+    <h1>统计检验检索表</h1>
+    <p>像植物检索表一样，一次回答一个问题，最后落到该用的检验方法。每个方法都附有前提条件、效应量、报告格式，以及 Python 和 R 代码。</p>
+  </header>
+
+  <section id="key" aria-label="检索">
+    <div class="key">
+      <div class="trail">
+        <p class="label">检索路径</p>
+        <ol id="trail"></ol>
+        <div class="quick" id="quick">
+          <p class="label">常见场景</p>
+          <div class="chips" id="quickchips"></div>
+        </div>
+      </div>
+      <div class="stage" id="stage" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="block" id="tests">
+    <div class="sechead"><h2>方法卡片</h2><p>按设计查找，或展开卡片看代码。</p></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>数据和设计</th><th>参数检验</th><th>非参数 / 替代</th></tr></thead>
+        <tbody id="cheat"></tbody>
+      </table>
+    </div>
+    <div class="filters chips" id="filters" role="group" aria-label="筛选方法"></div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section class="block" id="basics">
+    <div class="sechead"><h2>基础知识</h2><p>选对方法之前需要知道的几件事。</p></div>
+    <div class="basics">
+      <aside class="toc" aria-label="基础知识目录">
+        <ol>
+          <li><a href="#vartypes">变量类型</a></li>
+          <li><a href="#logic">假设检验的逻辑</a></li>
+          <li><a href="#effect">效应量与置信区间</a></li>
+          <li><a href="#assume">检查前提</a></li>
+          <li><a href="#nonparam">参数与非参数</a></li>
+          <li><a href="#multiple">多重比较</a></li>
+          <li><a href="#linear">一切都是线性模型</a></li>
+          <li><a href="#pseudo">伪重复与混合模型</a></li>
+          <li><a href="#power">样本量与功效</a></li>
+          <li><a href="#reporting">怎么报告结果</a></li>
+        </ol>
+      </aside>
+      <div class="prose">
+        <article id="vartypes">
+          <h3>变量类型</h3>
+          <p>选方法的第一步是看结局变量（因变量）是什么类型。同一个现象可以用不同类型记录，比如强度可以记成 MPa（连续），也可以记成合格 / 不合格（二分类）。连续记录保留的信息最多，检验也最有力。</p>
+          <div class="tablewrap"><table>
+            <thead><tr><th>类型</th><th>例子</th><th>常用方法</th></tr></thead>
+            <tbody>
+              <tr><td>连续</td><td>强度 MPa、尺寸 mm、时间 s</td><td>t 检验、ANOVA、线性回归</td></tr>
+              <tr><td>有序等级</td><td>1–5 级外观评分、轻 / 中 / 重</td><td>秩检验、有序 Logistic 回归</td></tr>
+              <tr><td>名义（无序分类）</td><td>材料种类、失效模式</td><td>卡方检验、多项 Logistic</td></tr>
+              <tr><td>二分类</td><td>合格 / 不合格</td><td>卡方、Fisher、Logistic 回归</td></tr>
+              <tr><td>计数</td><td>缺陷个数、故障次数</td><td>泊松 / 负二项回归</td></tr>
+              <tr><td>时间到事件</td><td>疲劳寿命、到失效的循环数</td><td>Kaplan-Meier、Cox 回归</td></tr>
+            </tbody>
+          </table></div>
+        </article>
+
+        <article id="logic">
+          <h3>假设检验的逻辑</h3>
+          <p>先假设"没有差异"（零假设 H₀），再看在 H₀ 成立时，得到当前这么极端的数据有多罕见。这个概率就是 p 值。p 很小，说明数据和 H₀ 不太相容。</p>
+          <ul>
+            <li><b>p 值不是</b>"H₀ 为真的概率"，也不是"结果可重复的概率"。</li>
+            <li><b>p &gt; 0.05 不等于没有差异</b>，可能只是样本太小、看不出来。</li>
+            <li><b>显著不等于重要</b>。样本足够大时，微不足道的差异也会显著，所以要看效应量。</li>
+          </ul>
+          <div class="tablewrap"><table>
+            <thead><tr><th></th><th>H₀ 实际为真</th><th>H₀ 实际为假</th></tr></thead>
+            <tbody>
+              <tr><td>拒绝 H₀</td><td>第一类错误（概率 α，常取 0.05）</td><td>正确，概率 = 功效 1 − β</td></tr>
+              <tr><td>不拒绝 H₀</td><td>正确</td><td>第二类错误（概率 β）</td></tr>
+            </tbody>
+          </table></div>
+          <p>双侧检验是默认选择。只有在实验之前就确定只关心一个方向、另一个方向的结果没有意义时，才用单侧检验。</p>
+        </article>
+
+        <article id="effect">
+          <h3>效应量与置信区间</h3>
+          <p>p 值回答"有没有"，效应量回答"有多大"。报告时两者都要给，最好再加上 95% 置信区间。</p>
+          <p class="formula">Cohen's d = (x̄₁ − x̄₂) / s_pooled
+η²        = SS_组间 / SS_总
+r         = Z / √N            （秩检验）
+Cramér's V = √( χ² / (N·(k − 1)) )</p>
+          <div class="tablewrap"><table>
+            <thead><tr><th>效应量</th><th>小</th><th>中</th><th>大</th></tr></thead>
+            <tbody>
+              <tr><td>Cohen's d</td><td class="mono">0.2</td><td class="mono">0.5</td><td class="mono">0.8</td></tr>
+              <tr><td>r</td><td class="mono">0.1</td><td class="mono">0.3</td><td class="mono">0.5</td></tr>
+              <tr><td>η²</td><td class="mono">0.01</td><td class="mono">0.06</td><td class="mono">0.14</td></tr>
+            </tbody>
+          </table></div>
+          <p>这些是 Cohen 针对行为科学给的参考线。工程上更有意义的做法，是直接用原单位报告差值，比如"强度高 8.3 MPa，95% CI [3.1, 13.5]"，再和设计余量比较。</p>
+        </article>
+
+        <article id="assume">
+          <h3>检查前提</h3>
+          <ul>
+            <li><b>独立性</b>：最重要，也最无法事后补救。同一批次、同一对象的多次测量不是独立观测，见下文的伪重复。</li>
+            <li><b>正态性</b>：看的是各组内部或模型残差，不是把所有数据放在一起看。Q-Q 图比检验更有用：样本小时 Shapiro-Wilk 检验没有功效，样本大时又对微小偏离过度敏感。</li>
+            <li><b>方差齐性</b>：可以用 Levene 检验，或看各组标准差之比是否小于 2。两组比较时直接用 Welch t 检验，就不必纠结。</li>
+            <li><b>离群点</b>：先查是不是测量或录入错误。不是错误的话，不要随手删，可以用稳健方法，或报告删除前后两种结果。</li>
+          </ul>
+          <p class="formula">from scipy import stats
+stats.shapiro(resid)               # 正态性
+stats.levene(a, b, c)              # 方差齐性
+import statsmodels.api as sm
+sm.qqplot(resid, line="45", fit=True)   # Q-Q 图</p>
+        </article>
+
+        <article id="nonparam">
+          <h3>参数与非参数</h3>
+          <p>参数检验（t、ANOVA）假设数据服从某种分布，通常是正态。非参数检验（Mann-Whitney、Kruskal-Wallis）把数据换成秩次再比较，不依赖分布形状。</p>
+          <ul>
+            <li>满足前提时，参数检验功效更高；但非参数检验的损失不大，正态数据下约为 95% 的效率。</li>
+            <li>样本较大时，由于中心极限定理，t 检验对偏态相当稳健。真正需要非参数方法的情形是：样本小且明显偏态、有极端离群点，或数据本身是有序等级。</li>
+            <li>非参数检验比较的是分布位置。只有两组分布形状相近时，才能把结果解读成"中位数不同"。</li>
+          </ul>
+        </article>
+
+        <article id="multiple">
+          <h3>多重比较</h3>
+          <p>每做一次检验都有 α 的机会误报。做 m 次独立检验，至少误报一次的概率是：</p>
+          <p class="formula">FWER = 1 − (1 − α)^m      m = 6 时约 26%，m = 20 时约 64%</p>
+          <ul>
+            <li><b>Bonferroni</b>：把 α 除以 m，简单但保守。</li>
+            <li><b>Holm</b>：逐步版的 Bonferroni，同样控制总体错误率，功效更高，可以作为默认选择。</li>
+            <li><b>Benjamini-Hochberg（FDR）</b>：控制"显著结果里误报的比例"，适合探索性的大量检验。</li>
+            <li><b>Tukey HSD、Dunnett、Games-Howell</b>：专门为 ANOVA 之后两两比较设计，已经内置校正。</li>
+          </ul>
+          <p class="formula">from statsmodels.stats.multitest import multipletests
+reject, p_adj, _, _ = multipletests(pvals, method="holm")   # 或 "fdr_bh"</p>
+        </article>
+
+        <article id="linear">
+          <h3>一切都是线性模型</h3>
+          <p>常见检验大多是线性模型的特例。理解这一点后，遇到更复杂的设计（加协变量、加交互、加随机效应），只需要往同一个模型里加项。</p>
+          <div class="tablewrap"><table>
+            <thead><tr><th>检验</th><th>等价的 R 模型</th></tr></thead>
+            <tbody>
+              <tr><td>单样本 t</td><td class="mono">lm(y ~ 1)</td></tr>
+              <tr><td>独立样本 t</td><td class="mono">lm(y ~ group)</td></tr>
+              <tr><td>配对 t</td><td class="mono">lm(after - before ~ 1)</td></tr>
+              <tr><td>单因素 ANOVA</td><td class="mono">lm(y ~ group)</td></tr>
+              <tr><td>双因素 ANOVA</td><td class="mono">lm(y ~ A * B)</td></tr>
+              <tr><td>ANCOVA</td><td class="mono">lm(y ~ group + x)</td></tr>
+              <tr><td>Pearson 相关</td><td class="mono">lm(scale(y) ~ scale(x))</td></tr>
+              <tr><td>重复测量 / 分批数据</td><td class="mono">lmer(y ~ group + (1 | id))</td></tr>
+            </tbody>
+          </table></div>
+        </article>
+
+        <article id="pseudo">
+          <h3>伪重复与混合模型</h3>
+          <p>3 种材料、每种打 4 批、每批测 5 根，一共 60 个数。但同一批的试件共享喷嘴状态、湿度和料的干燥程度，彼此相似。把 60 个数当作独立样本，会高估样本量，让 p 值偏小。这叫伪重复（pseudoreplication）。</p>
+          <p>两种处理方法：</p>
+          <ul>
+            <li><b>先汇总</b>：每批取平均，用 12 个批均值做 ANOVA。简单可靠，但丢掉了批内信息。</li>
+            <li><b>混合效应模型</b>：材料是固定效应，批次是随机效应，同时利用批内和批间信息，还能容忍缺失和不平衡。</li>
+          </ul>
+          <p class="formula">library(lmerTest)
+m &lt;- lmer(strength ~ material + (1 | batch), data = df)
+anova(m)        # 材料的 F 检验（Satterthwaite 自由度）</p>
+          <p>判断一个因素是固定效应还是随机效应：换一次实验，它的水平还是这几个（材料），就是固定效应；每次都换成新的（批次、操作员、受试者），就是随机效应。随机效应水平少于 5 个时，方差估计不稳，可以改作固定效应。</p>
+        </article>
+
+        <article id="power">
+          <h3>样本量与功效</h3>
+          <p>功效是"差异真实存在时能检出来的概率"，通常要求 ≥ 0.8。实验之前算样本量，比事后发现不显著再补样本可靠得多。</p>
+          <div class="tablewrap"><table>
+            <thead><tr><th>预期效应 d</th><th>两组独立 t 检验，每组需要</th></tr></thead>
+            <tbody>
+              <tr><td>0.2（小）</td><td class="mono">394</td></tr>
+              <tr><td>0.5（中）</td><td class="mono">64</td></tr>
+              <tr><td>0.8（大）</td><td class="mono">26</td></tr>
+            </tbody>
+          </table></div>
+          <p>上表取 α = 0.05、双侧、功效 0.8。</p>
+          <p class="formula">from statsmodels.stats.power import TTestIndPower
+TTestIndPower().solve_power(effect_size=0.5, alpha=0.05, power=0.8)   # ≈ 63.8
+
+pwr::pwr.t.test(d = 0.5, sig.level = 0.05, power = 0.8)               # R</p>
+        </article>
+
+        <article id="reporting">
+          <h3>怎么报告结果</h3>
+          <p>一条完整的结果至少包括：用了什么检验、统计量和自由度、精确的 p 值、效应量及置信区间、每组的样本量和描述统计。</p>
+          <p class="formula">Welch t 检验显示 PA-CF 的弯曲强度高于 PET-CF
+（M = 112.4 vs 101.6 MPa，n = 10 / 10），
+t(17.3) = 2.85, p = .011, Hedges' g = 1.21, 差值 95% CI [2.8, 18.8] MPa。</p>
+          <ul>
+            <li>p 值写精确值（p = .011），小于 .001 时写 p &lt; .001，不要只写 p &lt; .05。</li>
+            <li>说明前提如何检查、违反时怎么处理，以及是否做了多重比较校正。</li>
+            <li>附上能复现的代码和原始数据。</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Find Your Stats · 统计检验检索表。内容用于学习和快速查阅；方法选择最终取决于你的实验设计，重要研究请咨询统计专业人员。报告示例中的数字都是示意。
+  </footer>
+</div>
+
+<script>
+const TESTS = {
+onet:{name:"单样本 t 检验",en:"One-sample t-test",cat:"cmp",np:false,
+ desc:"样本均值是否等于一个已知值或标称值。",
+ assume:["观测相互独立","数据近似正态；n ≥ 30 时对偏态较稳健"],
+ alt:"Wilcoxon 符号秩检验",post:"",es:"Cohen's d = (x̄ − μ₀) / s",
+ report:"t(14) = 2.41, p = .030, d = 0.62",example:"15 件样品的平均输出扭矩是否达到标称 5 N·m",
+ py:`from scipy import stats
+res = stats.ttest_1samp(x, popmean=5.0)
+print(res.statistic, res.pvalue)
+print(res.confidence_interval())`,
+ r:`t.test(x, mu = 5)`},
+sr1:{name:"Wilcoxon 符号秩检验（单样本）",en:"Wilcoxon signed-rank, one-sample",cat:"cmp",np:true,
+ desc:"中位数是否等于一个已知值，不要求正态。",
+ assume:["观测相互独立","与已知值之差的分布大致对称"],
+ alt:"",post:"",es:"r = Z / √N",report:"V = 98, p = .021, r = 0.59",
+ py:`from scipy import stats
+stats.wilcoxon(x - 5.0)`,
+ r:`wilcox.test(x, mu = 5)`},
+welch:{name:"Welch t 检验",en:"Welch's t-test",cat:"cmp",np:false,
+ desc:"比较两个独立组的均值，不要求方差相等。两组比较时推荐默认使用。",
+ assume:["两组相互独立","各组近似正态，或每组 n ≥ 30"],
+ alt:"Mann-Whitney U 检验",post:"",es:"Hedges' g（小样本校正后的 Cohen's d）",
+ report:"t(17.3) = 2.85, p = .011, g = 1.21",example:"PA-CF 与 PET-CF 试件的弯曲强度",
+ py:`from scipy import stats
+stats.ttest_ind(a, b, equal_var=False)
+
+import pingouin as pg            # 一次给出 t、df、CI、效应量
+pg.ttest(a, b, correction=True)`,
+ r:`t.test(a, b)          # R 默认就是 Welch
+effectsize::hedges_g(a, b)`},
+studt:{name:"独立样本 t 检验（Student）",en:"Student's t-test",cat:"cmp",np:false,
+ desc:"比较两个独立组的均值，假设两组方差相等。",
+ assume:["两组相互独立","各组近似正态","方差齐（Levene 检验，或标准差之比 < 2）"],
+ alt:"Mann-Whitney U 检验",post:"",es:"Cohen's d",
+ report:"t(18) = 2.31, p = .033, d = 1.03",
+ py:`from scipy import stats
+stats.ttest_ind(a, b, equal_var=True)`,
+ r:`t.test(a, b, var.equal = TRUE)`},
+mwu:{name:"Mann-Whitney U 检验",en:"Mann-Whitney U / Wilcoxon rank-sum",cat:"cmp",np:true,
+ desc:"比较两个独立组哪一组的数值普遍更大。适合偏态、有离群点或有序等级的数据。",
+ assume:["两组相互独立","两组分布形状相近时，才能解读为中位数不同"],
+ alt:"",post:"",es:"r = Z / √N，或 Cliff's δ",report:"U = 18, p = .009, r = 0.58",
+ py:`from scipy import stats
+stats.mannwhitneyu(a, b, alternative="two-sided")`,
+ r:`wilcox.test(a, b)`},
+pairt:{name:"配对 t 检验",en:"Paired t-test",cat:"cmp",np:false,
+ desc:"同一对象测两次（或一一配对）时，比较两次的均值差。",
+ assume:["各对之间相互独立","配对差值近似正态"],
+ alt:"Wilcoxon 符号秩检验",post:"",es:"d_z = 差值均值 / 差值标准差",
+ report:"t(11) = 3.02, p = .012, d_z = 0.87",example:"同一批试件退火前后的尺寸",
+ py:`from scipy import stats
+stats.ttest_rel(before, after)`,
+ r:`t.test(before, after, paired = TRUE)`},
+wsr:{name:"Wilcoxon 符号秩检验",en:"Wilcoxon signed-rank test",cat:"cmp",np:true,
+ desc:"配对数据的非参数比较，检验配对差值是否以 0 为中心。",
+ assume:["各对之间相互独立","差值分布大致对称"],
+ alt:"",post:"",es:"r = Z / √N",report:"V = 70, p = .016, r = 0.69",
+ py:`from scipy import stats
+stats.wilcoxon(before, after)`,
+ r:`wilcox.test(before, after, paired = TRUE)`},
+anova:{name:"单因素方差分析",en:"One-way ANOVA",cat:"cmp",np:false,
+ desc:"用 F 检验比较三组及以上独立组的均值。",
+ assume:["观测相互独立","各组残差近似正态","各组方差相近"],
+ alt:"方差不齐用 Welch ANOVA；非正态用 Kruskal-Wallis",
+ post:"Tukey HSD；只和对照组比时用 Dunnett",es:"η² = SS_组间 / SS_总；小样本更推荐 ω²",
+ report:"F(2, 27) = 8.41, p = .001, η² = .38",example:"三种碳纤材料的层间剪切强度",
+ py:`from scipy import stats
+stats.f_oneway(a, b, c)
+
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+print(pairwise_tukeyhsd(df["y"], df["group"]))`,
+ r:`m <- aov(y ~ group, data = df)
+summary(m)
+TukeyHSD(m)`},
+welchanova:{name:"Welch 方差分析",en:"Welch's ANOVA",cat:"cmp",np:false,
+ desc:"单因素方差分析的稳健版本，不要求各组方差相等。",
+ assume:["观测相互独立","各组近似正态"],
+ alt:"Kruskal-Wallis 检验",post:"Games-Howell",es:"ω²",
+ report:"F(2, 15.6) = 6.92, p = .007",
+ py:`import pingouin as pg
+pg.welch_anova(data=df, dv="y", between="group")
+pg.pairwise_gameshowell(data=df, dv="y", between="group")`,
+ r:`oneway.test(y ~ group, data = df)
+rstatix::games_howell_test(df, y ~ group)`},
+kw:{name:"Kruskal-Wallis 检验",en:"Kruskal-Wallis H test",cat:"cmp",np:true,
+ desc:"多组独立样本的秩比较，单因素 ANOVA 的非参数版本。",
+ assume:["观测相互独立","各组分布形状相近时，可解读为中位数不同"],
+ alt:"",post:"Dunn 检验 + Holm 校正",es:"ε² = H / (N − 1)",
+ report:"H(2) = 9.12, p = .010, ε² = .31",
+ py:`from scipy import stats
+stats.kruskal(a, b, c)
+
+import scikit_posthocs as sp
+sp.posthoc_dunn(df, val_col="y", group_col="group", p_adjust="holm")`,
+ r:`kruskal.test(y ~ group, data = df)
+rstatix::dunn_test(df, y ~ group, p.adjust.method = "holm")`},
+twoway:{name:"双因素 / 多因素方差分析",en:"Factorial ANOVA",cat:"cmp",np:false,
+ desc:"同时检验两个或更多因素的主效应和它们之间的交互作用。",
+ assume:["观测相互独立","残差近似正态","各单元格方差相近"],
+ alt:"对齐秩变换（ART ANOVA），或广义线性模型",
+ post:"交互不显著时比较主效应；交互显著时先做简单效应分析",es:"偏 η²",
+ report:"材料 × 层高：F(2, 54) = 4.37, p = .017, 偏 η² = .14",
+ note:"各组样本量不等时，平方和类型会影响结果：无交互用 II 型；有交互用 III 型，同时要用效应编码（R 里设 contr.sum）。",
+ py:`import statsmodels.api as sm
+import statsmodels.formula.api as smf
+m = smf.ols("y ~ C(material) * C(layer)", data=df).fit()
+sm.stats.anova_lm(m, typ=2)`,
+ r:`m <- lm(y ~ material * layer, data = df)
+car::Anova(m, type = 2)
+emmeans::emmeans(m, pairwise ~ material | layer)`},
+ancova:{name:"协方差分析",en:"ANCOVA",cat:"cmp",np:false,
+ desc:"比较组间均值，同时扣除一个连续协变量的影响。",
+ assume:["各组回归斜率相同（先检验 组别 × 协变量 的交互）","协变量与分组无关（随机分组时成立）","残差近似正态、方差相近"],
+ alt:"斜率不同时，直接报告含交互项的回归模型",post:"调整后均值（emmeans）两两比较",es:"偏 η²",
+ report:"F(2, 26) = 5.88, p = .008, 偏 η² = .31",example:"比较三种材料的强度，同时扣除各试件实际质量的差异",
+ py:`import statsmodels.api as sm
+import statsmodels.formula.api as smf
+m = smf.ols("y ~ C(group) + mass", data=df).fit()
+sm.stats.anova_lm(m, typ=2)`,
+ r:`m <- lm(y ~ group + mass, data = df)
+car::Anova(m, type = 2)
+emmeans::emmeans(m, pairwise ~ group)`},
+rmanova:{name:"重复测量方差分析",en:"Repeated-measures ANOVA",cat:"cmp",np:false,
+ desc:"同一批对象在多个条件下测量时，比较各条件的均值。",
+ assume:["球形性（Mauchly 检验）；不满足时用 Greenhouse-Geisser 校正","残差近似正态","没有缺失值"],
+ alt:"有缺失用线性混合模型；非正态用 Friedman 检验",post:"配对 t 检验 + Holm 校正",es:"广义 η²（η²G）",
+ report:"F(1.6, 17.8) = 12.4, p < .001, η²G = .21（GG 校正）",example:"同一批样件在 4 个温度下的刚度",
+ py:`import pingouin as pg
+pg.rm_anova(data=df, dv="y", within="temp", subject="id", correction=True)
+pg.pairwise_tests(data=df, dv="y", within="temp", subject="id", padjust="holm")`,
+ r:`afex::aov_ez(id = "id", dv = "y", data = df, within = "temp")`},
+friedman:{name:"Friedman 检验",en:"Friedman test",cat:"cmp",np:true,
+ desc:"重复测量设计的秩比较，重复测量 ANOVA 的非参数版本。",
+ assume:["对象之间相互独立","每个对象在每个条件下都有数据"],
+ alt:"",post:"Wilcoxon 符号秩 + Holm 校正，或 Nemenyi 检验",es:"Kendall's W = χ² / (N·(k − 1))",
+ report:"χ²(3) = 14.2, p = .003, W = .39",
+ py:`from scipy import stats
+stats.friedmanchisquare(t1, t2, t3, t4)`,
+ r:`friedman.test(y ~ temp | id, data = df)`},
+binom:{name:"二项检验",en:"Binomial test",cat:"cmp",np:true,
+ desc:"单个样本里某一类的比例是否等于给定值，结果只有两类。",
+ assume:["每次试验相互独立","每次成功的概率相同"],
+ alt:"",post:"",es:"比例及 95% 置信区间（Wilson 或 Clopper-Pearson）",
+ report:"38 / 50 = 76%, 95% CI [62%, 87%], p < .001（检验 p₀ = 0.5）",
+ py:`from scipy import stats
+res = stats.binomtest(38, n=50, p=0.5)
+print(res.pvalue, res.proportion_ci(method="wilson"))`,
+ r:`binom.test(38, 50, p = 0.5)`},
+chigof:{name:"卡方拟合优度检验",en:"Chi-square goodness-of-fit",cat:"cmp",np:true,
+ desc:"一个分类变量的各类比例，是否符合期望的比例。",
+ assume:["观测相互独立","每一类的期望频数 ≥ 5"],
+ alt:"期望频数太小时用精确多项检验",post:"",es:"Cohen's w",
+ report:"χ²(2, N = 90) = 6.47, p = .039",
+ py:`from scipy import stats
+stats.chisquare(f_obs=[40, 30, 20], f_exp=[45, 27, 18])`,
+ r:`chisq.test(c(40, 30, 20), p = c(.5, .3, .2))`},
+chi:{name:"卡方独立性检验",en:"Chi-square test of independence",cat:"cmp",np:true,
+ desc:"两个分类变量是否有关联；也用来比较多组的比例。",
+ assume:["观测相互独立，每个对象只计一次","至少 80% 的格子期望频数 ≥ 5，且没有 < 1 的格子"],
+ alt:"Fisher 精确检验",post:"调整后标准化残差 |z| > 2 的格子；或两两比较 + 校正",es:"Cramér's V；2×2 表用 φ",
+ report:"χ²(2, N = 120) = 7.84, p = .020, V = .26",example:"三种工艺的合格率是否相同",
+ py:`from scipy import stats
+chi2, p, dof, expected = stats.chi2_contingency(table)
+stats.contingency.association(table, method="cramer")`,
+ r:`chisq.test(table)
+rstatix::cramer_v(table)`},
+fisher:{name:"Fisher 精确检验",en:"Fisher's exact test",cat:"cmp",np:true,
+ desc:"样本小、期望频数不足时代替卡方检验，给出精确的 p 值。",
+ assume:["观测相互独立"],
+ alt:"",post:"两两 Fisher 检验 + 校正",es:"比值比 OR 及 95% CI",
+ report:"OR = 6.0, 95% CI [1.2, 34.6], p = .028",
+ py:`from scipy import stats
+stats.fisher_exact(table_2x2)`,
+ r:`fisher.test(table)`},
+mcnemar:{name:"McNemar 检验",en:"McNemar's test",cat:"cmp",np:true,
+ desc:"同一批对象前后两次的二分类结果有没有变化。只用两次结果不一致的那两格。",
+ assume:["各对之间相互独立"],
+ alt:"",post:"",es:"OR = b / c",report:"b = 12, c = 3, 精确 p = .035",
+ py:`from statsmodels.stats.contingency_tables import mcnemar
+mcnemar(table_2x2, exact=True)`,
+ r:`mcnemar.test(table)
+exact2x2::mcnemar.exact(table)`},
+cochran:{name:"Cochran Q 检验",en:"Cochran's Q test",cat:"cmp",np:true,
+ desc:"同一批对象在三个及以上条件下的二分类结果比较。",
+ assume:["对象之间相互独立"],
+ alt:"",post:"两两 McNemar 检验 + Holm 校正",es:"",
+ report:"Q(2) = 8.40, p = .015",
+ py:`from statsmodels.stats.contingency_tables import cochrans_q
+cochrans_q(x)          # 行 = 对象，列 = 条件，值为 0/1`,
+ r:`rstatix::cochran_qtest(df, pass ~ cond | id)`},
+pearson:{name:"Pearson 相关",en:"Pearson correlation",cat:"rel",np:false,
+ desc:"两个连续变量线性相关的强度和方向。",
+ assume:["关系是线性的（一定要先画散点图）","没有强影响点","检验 r 是否为 0 时，两变量近似二元正态"],
+ alt:"Spearman 秩相关",post:"",es:"r 本身；r² 是两者共同解释的方差比例",
+ report:"r(28) = .54, p = .002, 95% CI [.22, .75]",
+ py:`from scipy import stats
+res = stats.pearsonr(x, y)
+print(res.statistic, res.pvalue, res.confidence_interval())`,
+ r:`cor.test(x, y)`},
+spearman:{name:"Spearman 秩相关",en:"Spearman's ρ",cat:"rel",np:true,
+ desc:"单调关系的强度，用秩次计算，对离群点稳健，也适合有序数据。",
+ assume:["关系是单调的（一直上升或一直下降）"],
+ alt:"样本小或并列值多时用 Kendall τ",post:"",es:"ρ",
+ report:"ρ(28) = .47, p = .009",
+ py:`from scipy import stats
+stats.spearmanr(x, y)
+stats.kendalltau(x, y)`,
+ r:`cor.test(x, y, method = "spearman")
+cor.test(x, y, method = "kendall")`},
+pbis:{name:"点二列相关",en:"Point-biserial correlation",cat:"rel",np:false,
+ desc:"一个连续变量和一个二分类变量的相关。数学上等价于 Student t 检验。",
+ assume:["与 Student t 检验相同"],
+ alt:"Mann-Whitney U 检验",post:"",es:"r",report:"r_pb(38) = .41, p = .009",
+ py:`from scipy import stats
+stats.pointbiserialr(group01, y)`,
+ r:`cor.test(group01, y)`},
+cramer:{name:"卡方检验 + Cramér's V",en:"Chi-square with Cramér's V",cat:"rel",np:true,
+ desc:"两个分类变量之间关联的强度。",
+ assume:["同卡方独立性检验"],
+ alt:"样本小时用 Fisher 精确检验",post:"",es:"V = √( χ² / (N·(k − 1)) )，k 为行数、列数中较小的那个",
+ report:"χ²(4, N = 150) = 13.1, p = .011, V = .21",
+ py:`from scipy import stats
+stats.chi2_contingency(table)
+stats.contingency.association(table, method="cramer")`,
+ r:`chisq.test(table)
+rstatix::cramer_v(table)`},
+lin:{name:"线性回归",en:"Linear regression",cat:"pred",np:false,
+ desc:"用一个或多个自变量解释、预测一个连续结局。",
+ assume:["关系是线性的","残差独立、近似正态、方差相近（看残差图）","自变量之间没有严重共线性（VIF < 5）"],
+ alt:"稳健回归、对结局做变换，或广义线性模型",post:"",es:"R²、调整 R²；每个系数及其 95% CI",
+ report:"b = 2.4 MPa / 10 °C, 95% CI [1.1, 3.7], p < .001；R² = .46",example:"喷嘴温度和层高对强度的影响",
+ py:`import statsmodels.formula.api as smf
+m = smf.ols("strength ~ temp + layer", data=df).fit()
+print(m.summary())`,
+ r:`m <- lm(strength ~ temp + layer, data = df)
+summary(m); confint(m)
+plot(m)              # 残差诊断图`},
+logit:{name:"Logistic 回归",en:"Logistic regression",cat:"pred",np:false,
+ desc:"结局是二分类（合格 / 不合格，成功 / 失败）。",
+ assume:["观测相互独立","连续自变量与 logit 呈线性关系","每个自变量大约至少有 10 个事件"],
+ alt:"",post:"",es:"比值比 OR = e^b；AUC",
+ report:"OR = 1.8 / 10 °C, 95% CI [1.2, 2.7], p = .004",
+ py:`import numpy as np
+import statsmodels.formula.api as smf
+m = smf.logit("passed ~ temp + C(material)", data=df).fit()
+print(np.exp(m.params), np.exp(m.conf_int()))`,
+ r:`m <- glm(passed ~ temp + material, family = binomial, data = df)
+exp(cbind(OR = coef(m), confint(m)))`},
+ordreg:{name:"有序 Logistic 回归",en:"Ordinal (proportional-odds) regression",cat:"pred",np:false,
+ desc:"结局是有序等级，例如 1–5 级的外观评分。",
+ assume:["比例优势假设：自变量在每个切点上的效应相同"],
+ alt:"假设不满足时用偏比例优势模型",post:"",es:"累积比值比 OR",
+ report:"OR = 2.3, 95% CI [1.3, 4.1]",
+ py:`from statsmodels.miscmodels.ordinal_model import OrderedModel
+m = OrderedModel.from_formula("score ~ temp + layer", df, distr="logit").fit(method="bfgs")
+print(m.summary())`,
+ r:`m <- MASS::polr(factor(score, ordered = TRUE) ~ temp + layer, data = df, Hess = TRUE)
+summary(m)`},
+pois:{name:"泊松 / 负二项回归",en:"Poisson / negative binomial regression",cat:"pred",np:false,
+ desc:"结局是计数，例如缺陷个数、故障次数。",
+ assume:["泊松要求方差约等于均值；方差远大于均值（过度离散）时改用负二项","观察时间或面积不同时，加 offset"],
+ alt:"负二项回归；零值特别多时用零膨胀模型",post:"",es:"率比 IRR = e^b",
+ report:"IRR = 0.62, 95% CI [0.45, 0.85], p = .003",
+ py:`import statsmodels.api as sm
+import statsmodels.formula.api as smf
+m = smf.glm("defects ~ C(material)", data=df, family=sm.families.Poisson()).fit()
+print(m.summary())
+# 过度离散时: family=sm.families.NegativeBinomial()`,
+ r:`m <- glm(defects ~ material, family = poisson, data = df)
+m_nb <- MASS::glm.nb(defects ~ material, data = df)`},
+surv:{name:"生存分析",en:"Kaplan-Meier, log-rank & Cox regression",cat:"pred",np:false,
+ desc:"结局是事件发生前的时间，而且有删失（试验结束时一部分样品还没失效）。",
+ assume:["删失与失效无关（非信息性删失）","Cox 回归要求比例风险（Schoenfeld 残差检验）"],
+ alt:"不满足比例风险时用分层 Cox 或时变系数",post:"",es:"中位寿命；风险比 HR",
+ report:"log-rank χ²(1) = 6.2, p = .013；HR = 0.41, 95% CI [0.20, 0.83]",example:"两种关节结构的疲劳寿命",
+ py:`from lifelines import KaplanMeierFitter, CoxPHFitter
+from lifelines.statistics import logrank_test
+logrank_test(t_a, t_b, event_observed_A=e_a, event_observed_B=e_b)
+CoxPHFitter().fit(df, duration_col="cycles", event_col="failed").print_summary()`,
+ r:`library(survival)
+fit <- survfit(Surv(cycles, failed) ~ design, data = df)
+survdiff(Surv(cycles, failed) ~ design, data = df)
+coxph(Surv(cycles, failed) ~ design, data = df)`},
+mixed:{name:"线性混合效应模型",en:"Linear mixed-effects model",cat:"pred",np:false,
+ desc:"数据有分组或重复测量，例如试件嵌套在打印批次里、同一对象测多次。用随机效应处理组内相关。",
+ assume:["随机效应和残差近似正态","随机效应的水平最好有 5 个以上"],
+ alt:"结局不是连续数值时，用广义线性混合模型（GLMM）",post:"emmeans 两两比较",es:"边际 / 条件 R²；ICC",
+ report:"材料：F(2, 9.0) = 7.6, p = .012（Satterthwaite 自由度）",example:"3 种材料 × 4 批 × 每批 5 根试件",
+ note:"见下方“伪重复与混合模型”。",
+ py:`import statsmodels.formula.api as smf
+m = smf.mixedlm("strength ~ C(material)", df, groups=df["batch"]).fit(reml=True)
+print(m.summary())`,
+ r:`library(lmerTest)
+m <- lmer(strength ~ material + (1 | batch), data = df)
+anova(m)
+emmeans::emmeans(m, pairwise ~ material)`}
+};
+
+const TREE = {
+start:{q:"你想回答什么问题？",o:[
+ ["比较组之间有没有差异","均值、中位数或比例","cmp"],
+ ["看两个变量之间的关系","相关、关联","rel"],
+ ["用自变量解释或预测一个结局","建模、回归","pred"]]},
+cmp:{q:"要比较的那个量是什么类型？",o:[
+ ["连续数值或有序等级","强度、尺寸、1–5 级评分","cont"],
+ ["分类结果：比例或频数","合格 / 不合格、失效模式","cat"]]},
+cont:{q:"有几组？",o:[
+ ["1 组，和一个已知值比","例如和标称值比","one"],
+ ["2 组","","two"],
+ ["3 组或更多，或有多个因素","","many"]]},
+one:{q:"数据近似正态吗？",o:[
+ ["是，或样本量 ≥ 30","","R:onet"],
+ ["否，样本小且偏态，或是有序等级","","R:sr1"]]},
+two:{q:"两组是独立的，还是配对的？",o:[
+ ["独立","两组是不同的样品","twoind"],
+ ["配对","同一样品测两次，或一一配对","twopair"]]},
+twoind:{q:"两组数据是什么情况？",o:[
+ ["近似正态，或每组 n ≥ 30","默认推荐","R:welch"],
+ ["近似正态，且确认方差相等","","R:studt"],
+ ["明显偏态、有离群点，或是有序等级","","R:mwu"]]},
+twopair:{q:"配对差值近似正态吗？",o:[
+ ["是","","R:pairt"],
+ ["否，或是有序等级","","R:wsr"]]},
+many:{q:"实验是怎么设计的？",o:[
+ ["一个因素，各组独立","例如 3 种材料","m1"],
+ ["两个或更多因素","例如 材料 × 层高","R:twoway"],
+ ["同一批对象被反复测量","例如同一样件在 4 个温度下","rm"],
+ ["数据分批：试件嵌套在批次里","例如每种材料打 4 批、每批测 5 根","R:mixed"],
+ ["要扣除一个连续协变量的影响","例如试件实际质量","R:ancova"]]},
+m1:{q:"各组数据是什么情况？",o:[
+ ["近似正态，方差相近","","R:anova"],
+ ["近似正态，方差差别大","","R:welchanova"],
+ ["明显偏态、有离群点，或是有序等级","","R:kw"]]},
+rm:{q:"数据是什么情况？",o:[
+ ["近似正态，没有缺失","","R:rmanova"],
+ ["有缺失，或各对象测量时间点不一样","","R:mixed"],
+ ["明显偏态，或是有序等级","","R:friedman"]]},
+cat:{q:"是哪种比较？",o:[
+ ["一个样本的比例，和期望值比","例如合格率是否达到 90%","catone"],
+ ["两组或多组独立样本的比例","不同的样品","catind"],
+ ["同一批对象，前后或多个条件","","catpair"]]},
+catone:{q:"结果有几类？",o:[
+ ["两类","合格 / 不合格","R:binom"],
+ ["三类或更多","","R:chigof"]]},
+catind:{q:"列联表里各格的期望频数？",o:[
+ ["绝大多数 ≥ 5","","R:chi"],
+ ["有不少格 < 5，样本小","","R:fisher"]]},
+catpair:{q:"测了几次？",o:[
+ ["2 次","2×2 配对表","R:mcnemar"],
+ ["3 次或更多，结果是二分类","","R:cochran"]]},
+rel:{q:"两个变量是什么类型？",o:[
+ ["都是连续变量","","relc"],
+ ["都是分类变量","","R:cramer"],
+ ["一个连续，一个二分类","","R:pbis"],
+ ["一个连续，一个多分类","这其实是多组比较","m1"]]},
+relc:{q:"散点图上看起来怎样？",o:[
+ ["大致是直线，没有明显离群点","","R:pearson"],
+ ["单调但弯曲、有离群点，或是有序数据","","R:spearman"]]},
+pred:{q:"结局变量是什么类型？",o:[
+ ["连续","强度、尺寸","R:lin"],
+ ["二分类","合格 / 不合格","R:logit"],
+ ["有序等级","1–5 级评分","R:ordreg"],
+ ["计数","缺陷个数","R:pois"],
+ ["事件发生前的时间","疲劳寿命、失效时间","R:surv"],
+ ["数据分组或重复测量","批次、同一对象多次测量","R:mixed"]]}
+};
+
+const QUICK = [
+ ["两组独立比较",[["start",0],["cmp",0],["cont",1],["two",0]]],
+ ["前后配对比较",[["start",0],["cmp",0],["cont",1],["two",1]]],
+ ["三组以上",[["start",0],["cmp",0],["cont",2],["many",0]]],
+ ["分批打印的试件",[["start",0],["cmp",0],["cont",2],["many",3]]],
+ ["比较合格率",[["start",0],["cmp",1],["cat",1]]],
+ ["两个变量的相关",[["start",1],["rel",0]]]
+];
+
+const CHEAT = [
+ ["一组，和已知值比","onet","sr1"],
+ ["两组独立","welch","mwu"],
+ ["两组配对","pairt","wsr"],
+ ["多组独立","anova welchanova","kw"],
+ ["多组重复测量","rmanova mixed","friedman"],
+ ["多个因素","twoway",""],
+ ["两个连续变量","pearson","spearman"],
+ ["两个分类变量 / 多组比例","chi","fisher"],
+ ["配对的二分类结果","","mcnemar cochran"]
+];
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $ = id => document.getElementById(id);
+let path = [];
+
+function current(){
+  if(!path.length) return "start";
+  const [k,i] = path[path.length-1];
+  return TREE[k].o[i][2];
+}
+function facts(t){
+  const rows = [];
+  rows.push(["前提", "<ul>"+t.assume.map(a=>"<li>"+esc(a)+"</li>").join("")+"</ul>"]);
+  if(t.alt) rows.push(["前提不满足", esc(t.alt)]);
+  if(t.post) rows.push(["事后检验", esc(t.post)]);
+  if(t.es) rows.push(["效应量", esc(t.es)]);
+  rows.push(["报告示例", '<span class="report">'+esc(t.report)+"</span>"]);
+  if(t.example) rows.push(["场景举例", esc(t.example)]);
+  return '<dl class="facts">'+rows.map(r=>"<dt>"+r[0]+"</dt><dd>"+r[1]+"</dd>").join("")+"</dl>";
+}
+function renderTrail(){
+  const tr = $("trail");
+  if(!path.length){
+    tr.innerHTML = '<li><button type="button" disabled><span class="n">01</span><span><span class="q">还没有回答问题</span><span class="a">从右边第 1 步开始</span></span></button></li>';
+  } else {
+    tr.innerHTML = path.map(([k,i],j)=>'<li><button type="button" data-back="'+j+'" title="回到这一步"><span class="n">'+String(j+1).padStart(2,"0")+'</span><span><span class="q">'+esc(TREE[k].q)+'</span><span class="a">'+esc(TREE[k].o[i][0])+"</span></span></button></li>").join("");
+  }
+  $("quick").hidden = path.length > 0;
+}
+function renderStage(focus){
+  const n = current(), st = $("stage");
+  if(n.startsWith("R:")){
+    const id = n.slice(2), t = TESTS[id];
+    st.innerHTML = '<div class="result"><p class="label">检索结果</p><span class="en">'+esc(t.en)+'</span><h2>'+esc(t.name)+'</h2><p class="lead">'+esc(t.desc)+"</p>"+facts(t)+
+      '<div class="ctrl"><a class="btn primary" href="#'+id+'" data-open="'+id+'">看代码和完整卡片</a><button class="btn" type="button" data-act="back">上一步</button><button class="btn" type="button" data-act="reset">重新开始</button></div></div>';
+  } else {
+    const t = TREE[n];
+    st.innerHTML = '<span class="stepno">第 '+(path.length+1)+' 步</span><h2>'+esc(t.q)+'</h2><div class="opts">'+
+      t.o.map((o,i)=>'<button class="opt" type="button" data-pick="'+n+'|'+i+'"><span class="k">'+String.fromCharCode(97+i)+'.</span><span class="t">'+esc(o[0])+(o[1]?'<span class="h">'+esc(o[1])+"</span>":"")+'</span><span class="go">→</span></button>').join("")+"</div>"+
+      (path.length?'<div class="ctrl"><button class="btn" type="button" data-act="back">上一步</button><button class="btn" type="button" data-act="reset">重新开始</button></div>':"");
+  }
+  renderTrail();
+  if(focus){ const f = st.querySelector("button,a"); if(f) f.focus({preventScroll:true}); }
+}
+document.addEventListener("click", e=>{
+  const b = e.target.closest("[data-pick],[data-act],[data-back],[data-open],[data-quick],[data-filter],.copy");
+  if(!b) return;
+  if(b.dataset.pick){ const [k,i] = b.dataset.pick.split("|"); path.push([k,+i]); renderStage(true); }
+  else if(b.dataset.act==="back"){ path.pop(); renderStage(true); }
+  else if(b.dataset.act==="reset"){ path=[]; renderStage(true); }
+  else if(b.dataset.back!==undefined){ path = path.slice(0,+b.dataset.back); renderStage(true); }
+  else if(b.dataset.open){ openCard(b.dataset.open); }
+  else if(b.dataset.quick!==undefined){ path = QUICK[+b.dataset.quick][1].map(x=>x.slice()); renderStage(true); }
+  else if(b.dataset.filter){ setFilter(b.dataset.filter); }
+  else if(b.classList.contains("copy")){ copyCode(b); }
+});
+
+function openCard(id){
+  setFilter("all");
+  const d = $(id); if(!d) return;
+  d.open = true;
+  setTimeout(()=>d.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto":"smooth", block:"start"}),0);
+}
+function copyCode(b){
+  const pre = b.closest(".codebox").querySelector("pre"), text = pre.textContent;
+  const done = ()=>{ b.textContent="已复制"; setTimeout(()=>b.textContent="复制",1400); };
+  const fallback = ()=>{ const r=document.createRange(); r.selectNodeContents(pre); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent="已选中，按 Ctrl+C"; };
+  try{ navigator.clipboard.writeText(text).then(done, fallback); }catch(err){ fallback(); }
+}
+
+const FILTERS = [["all","全部"],["cmp","比较差异"],["rel","变量关系"],["pred","建模与预测"],["np","非参数"]];
+function setFilter(f){
+  document.querySelectorAll("[data-filter]").forEach(c=>c.setAttribute("aria-pressed", c.dataset.filter===f));
+  document.querySelectorAll("details.card").forEach(d=>{
+    const t = TESTS[d.id];
+    d.hidden = !(f==="all" || (f==="np" ? t.np : t.cat===f));
+  });
+}
+function link(ids){
+  if(!ids) return '<span class="dim">—</span>';
+  return ids.split(" ").map(id=>'<a href="#'+id+'" data-open="'+id+'">'+esc(TESTS[id].name)+"</a>").join("<br>");
+}
+function build(){
+  $("quickchips").innerHTML = QUICK.map((q,i)=>'<button class="chip" type="button" data-quick="'+i+'">'+esc(q[0])+"</button>").join("");
+  $("cheat").innerHTML = CHEAT.map(r=>"<tr><td>"+esc(r[0])+"</td><td>"+link(r[1])+"</td><td>"+link(r[2])+"</td></tr>").join("");
+  $("filters").innerHTML = FILTERS.map(f=>'<button class="chip" type="button" data-filter="'+f[0]+'" aria-pressed="'+(f[0]==="all")+'">'+f[1]+"</button>").join("");
+  const order = ["onet","sr1","welch","studt","mwu","pairt","wsr","anova","welchanova","kw","twoway","ancova","rmanova","friedman","binom","chigof","chi","fisher","mcnemar","cochran","pearson","spearman","pbis","cramer","lin","logit","ordreg","pois","surv","mixed"];
+  const catName = {cmp:"比较",rel:"关系",pred:"建模"};
+  $("cards").innerHTML = order.map(id=>{
+    const t = TESTS[id];
+    return '<details class="card" id="'+id+'"><summary><span class="cname">'+esc(t.name)+'<span class="en">'+esc(t.en)+'</span></span><span class="cdesc">'+esc(t.desc)+'</span><span class="tags"><span class="tag">'+catName[t.cat]+"</span>"+(t.np?'<span class="tag np">非参数</span>':"")+'</span></summary><div class="cbody">'+facts(t)+
+      (t.note?'<p class="note">'+esc(t.note)+"</p>":"")+
+      '<div class="code2"><div class="codebox"><div class="lang">PYTHON<button class="copy" type="button">复制</button></div><pre>'+esc(t.py)+'</pre></div><div class="codebox"><div class="lang">R<button class="copy" type="button">复制</button></div><pre>'+esc(t.r)+"</pre></div></div></div></details>";
+  }).join("");
+  renderStage(false);
+  const h = (location.hash||"").slice(1);
+  if(h && TESTS[h]) openCard(h);
+}
+build();
+</script>
+</body>
+</html>
